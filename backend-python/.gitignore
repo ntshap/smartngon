@@ -1,0 +1,42 @@
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+backend.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Model weights (large files)
+*.pt
+*.pth
+*.onnx
+
+# Debug files
+debug_*.jpg
+debug_*.png
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Distribution
+dist/
+build/
+*.egg-info/
