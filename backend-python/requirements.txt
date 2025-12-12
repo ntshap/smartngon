@@ -9,3 +9,5 @@ paho-mqtt==1.6.1
 supabase==2.0.3
 numpy==1.26.3
 requests
+inference-sdk
+inference

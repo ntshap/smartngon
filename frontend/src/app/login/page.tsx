@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Loader2, KeyRound } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 
@@ -50,10 +51,13 @@ export default function LoginPage() {
             {/* Left Side - Image & Branding */}
             <div className="relative hidden w-full flex-col justify-between bg-slate-900 p-12 text-white lg:flex lg:w-1/2 xl:w-5/12">
                 <div className="absolute inset-0 z-0">
-                    <img
+                    <Image
                         src="https://images.unsplash.com/photo-1484557985045-edf25e08da73?ixlib=rb-4.0.3&auto=format&fit=crop&w=1973&q=80"
                         alt="Background"
-                        className="h-full w-full object-cover opacity-40 mix-blend-overlay"
+                        fill
+                        priority
+                        className="object-cover opacity-40 mix-blend-overlay"
+                        sizes="(max-width: 1024px) 0vw, 50vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
                 </div>

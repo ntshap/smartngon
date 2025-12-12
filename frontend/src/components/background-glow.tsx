@@ -24,7 +24,7 @@ export function BackgroundGlow({
         loop
         muted
         playsInline
-        preload="auto"
+        preload="none"
       >
         <source src={videoSrc} type="video/mp4" />
       </video>

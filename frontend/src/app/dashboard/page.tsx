@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import SmartMap from "@/components/smart-map";
-import LiveCamera from "@/components/live-camera";
+import LiveCamera from "@/components/live-camera-wrapper";
 import { WeatherWidget } from "@/components/weather-widget";
 import { FeedControlCard } from "@/components/feed-control-card";
 import { SmartFeedCard } from "@/components/smart-feed-card";
@@ -237,7 +238,7 @@ export default function DashboardPage() {
                                         className="text-left rounded-[2rem] border border-white/50 bg-white/60 backdrop-blur-md p-5 shadow-sm transition-all hover:border-white/70 hover:bg-white/80 hover:shadow-lg hover:scale-[1.02]"
                                     >
                                         <div className="mb-4 relative h-12 w-12 overflow-hidden rounded-full border-2 border-white/80 shadow-md ring-2 ring-white/50">
-                                            <img src={goat.image_url} alt={goat.name} className="h-full w-full object-cover" />
+                                            <Image src={goat.image_url} alt={goat.name} fill className="object-cover" sizes="48px" />
                                         </div>
                                         <p className="font-bold text-slate-900">{goat.name}</p>
                                         <p className="text-xs font-bold text-slate-600">{goat.breed}</p>

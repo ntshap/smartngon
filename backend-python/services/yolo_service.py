@@ -1,64 +1,49 @@
+"""
+YOLO Service - Using Roboflow Inference SDK with Pre-trained Detection Model
+Fallback to Microsoft Florence-2 or standard object detection
+"""
 import cv2
 import numpy as np
 import logging
 import os
-from pathlib import Path
-import warnings
+import base64
+import requests
 from datetime import datetime
 from collections import deque
+from inference_sdk import InferenceHTTPClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Suppress PyTorch warnings for weights_only
-warnings.filterwarnings('ignore', category=FutureWarning)
+# Roboflow Configuration
+ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY", "")
+ROBOFLOW_WORKSPACE = "smartngon"
+ROBOFLOW_WORKFLOW = "find-sheep-heads"
 
-# Monkey-patch torch.load before importing ultralytics
-import torch
-original_load = torch.load
-def patched_load(*args, **kwargs):
-    # Force weights_only=False for backward compatibility with trained models
-    kwargs['weights_only'] = False
-    return original_load(*args, **kwargs)
-torch.load = patched_load
+# Pre-trained detection model for sheep/goat - using a public model
+# You can replace with your own trained model: "workspace/project/version"
+DETECTION_MODEL = "sheep-detection-zxr7b/1"  # Public sheep detection model
 
-# Import YOLO after patching
-from ultralytics import YOLO
+# Initialize Roboflow client
+roboflow_client = None
+if ROBOFLOW_API_KEY:
+    try:
+        roboflow_client = InferenceHTTPClient(
+            api_url="https://detect.roboflow.com",  # Use detect API for object detection
+            api_key=ROBOFLOW_API_KEY
+        )
+        logger.info(f"✅ Roboflow SDK initialized with detection endpoint")
+    except Exception as e:
+        logger.error(f"Failed to initialize Roboflow client: {e}")
+else:
+    logger.warning("⚠️ ROBOFLOW_API_KEY not set in environment variables!")
 
-# Load the YOLOv8 model - use pretrained COCO model as fallback
-# Custom trained model has memory issues in WSL, so we use COCO model with sheep/cow detection
-MODEL_CANDIDATES = [
-    'yolov8n.pt',  # Pretrained COCO model (includes sheep class 19, cow class 18)
-    Path('best.pt'),
-    Path('backend-python') / 'best.pt',
-    Path('SMARTNGON_CV') / 'runs' / 'detect' / 'train_improved' / 'weights' / 'best.pt',
-]
-
-model = None
-loaded_path = None
-for p in MODEL_CANDIDATES:
-    try_path = Path(p) if not str(p).endswith('.pt') or '/' in str(p) else p
-    if isinstance(try_path, Path) and not try_path.is_absolute():
-        try_path = Path(os.getcwd()) / try_path
-    
-    # Check if path exists (skip string paths like 'yolov8n.pt' - ultralytics will download)
-    if isinstance(try_path, str) or try_path.exists():
-        try:
-            model = YOLO(str(try_path) if isinstance(try_path, Path) else try_path)
-            loaded_path = try_path
-            logger.info(f"Loaded YOLOv8 model from: {try_path}")
-            break
-        except Exception as e:
-            logger.error(f"Attempted to load model at {try_path} but failed: {e}")
-
-if model is None:
-    logger.error("Failed to load YOLOv8 model from candidate paths: %s", MODEL_CANDIDATES)
 
 # Movement tracking state
 class MovementTracker:
     def __init__(self, max_history=30):
-        self.head_positions = deque(maxlen=max_history)  # Store last 30 positions
+        self.head_positions = deque(maxlen=max_history)
         self.movement_count = 0
         self.last_zone = None
         self.feeding_triggered = False
@@ -68,173 +53,232 @@ class MovementTracker:
         """Calculate which zone the head is in based on x position"""
         x_ratio = x_center / frame_width
         if x_ratio < 0.33:
-            return "FEEDING"  # Left zone - feeding area
+            return "FEEDING"
         elif x_ratio < 0.66:
-            return "FENCE"    # Middle zone - fence/border
+            return "FENCE"
         else:
-            return "KANDANG"  # Right zone - resting area
+            return "KANDANG"
     
     def update(self, bbox, frame_width, frame_height):
-        """Update movement tracking with new detection"""
+        """Update movement tracking based on new detection"""
         x1, y1, x2, y2 = bbox
         x_center = (x1 + x2) / 2
         y_center = (y1 + y2) / 2
         
+        self.head_positions.append((x_center, y_center))
+        
+        # Calculate current zone
         current_zone = self.calculate_zone(x_center, frame_width)
         
-        # Reset counter if goat returns to KANDANG zone
-        if current_zone == "KANDANG":
-            if self.movement_count > 0:
-                logger.info(f"Goat returned to KANDANG - resetting counter from {self.movement_count}")
-            self.movement_count = 0
-            self.feeding_triggered = False
-            self.last_reset_time = datetime.now()
-        
-        # Count zone crossing: when head enters FEEDING zone from FENCE
-        if current_zone == "FEEDING" and self.last_zone == "FENCE":
+        # Detect zone change = movement
+        if self.last_zone and self.last_zone != current_zone:
             self.movement_count += 1
-            logger.info(f"Zone crossing detected! FENCE → FEEDING. Count: {self.movement_count}/10")
+            logger.info(f"🔄 Zone changed: {self.last_zone} -> {current_zone}, moves: {self.movement_count}")
         
-        # Track movement within FEEDING zone
-        if current_zone == "FEEDING":
-            if len(self.head_positions) > 0:
-                last_x, last_y = self.head_positions[-1]
-                # Calculate movement distance
-                distance = ((x_center - last_x)**2 + (y_center - last_y)**2)**0.5
-                
-                # Count as movement if distance > 30 pixels (significant head movement)
-                if distance > 30:
-                    self.movement_count += 1
-                    logger.info(f"Head movement in FEEDING zone! Count: {self.movement_count}/10")
-            
-            self.head_positions.append((x_center, y_center))
-        
-        # Check if feeding should be triggered
-        should_feed = (current_zone == "FEEDING" and 
-                      self.movement_count >= 10 and 
-                      not self.feeding_triggered)
-        
-        if should_feed:
-            self.feeding_triggered = True
-            logger.warning(f"🔔 FEEDING TRIGGER! Movement count reached {self.movement_count}")
+        # If in FEEDING zone with significant movement, also count
+        if current_zone == "FEEDING" and len(self.head_positions) >= 5:
+            recent_positions = list(self.head_positions)[-5:]
+            x_movement = max(p[0] for p in recent_positions) - min(p[0] for p in recent_positions)
+            if x_movement > frame_width * 0.05:  # 5% of frame width
+                self.movement_count += 1
         
         self.last_zone = current_zone
+        
+        # Trigger feeding after 10 movements
+        should_feed = False
+        if self.movement_count >= 10 and not self.feeding_triggered:
+            should_feed = True
+            self.feeding_triggered = True
+            logger.info("🍽️ FEEDING TRIGGERED!")
+        
+        # Reset after 5 minutes
+        if (datetime.now() - self.last_reset_time).seconds > 300:
+            self.reset()
         
         return {
             "zone": current_zone,
             "movement_count": self.movement_count,
             "should_feed": should_feed,
-            "feeding_triggered": self.feeding_triggered
+            "feeding_triggered": self.feeding_triggered,
+            "x_center": x_center,
+            "y_center": y_center
         }
+    
+    def reset(self):
+        self.head_positions.clear()
+        self.movement_count = 0
+        self.last_zone = None
+        self.feeding_triggered = False
+        self.last_reset_time = datetime.now()
+
 
 # Global movement tracker instance
 movement_tracker = MovementTracker()
 
-def analyze_image(image_bytes):
-    """
-    Analyzes an image byte stream using YOLOv8 to detect objects (goats).
-    """
-    if model is None:
-        return {"error": "Model not loaded", "detections": []}
 
+def call_roboflow_detection(image_base64: str):
+    """
+    Call Roboflow Detection API with base64 image
+    Uses object detection model (not workflow/SAM)
+    """
+    if not roboflow_client:
+        logger.error("Roboflow client not initialized")
+        return {"error": "Client not initialized"}
+    
     try:
-        # Convert image bytes to numpy array
-        nparr = np.frombuffer(image_bytes, np.uint8)
+        logger.info("Calling Roboflow Detection API...")
         
+        # Try using SDK infer method for standard detection
+        result = roboflow_client.infer(image_base64, model_id=DETECTION_MODEL)
+        
+        logger.info(f"Roboflow detection response received")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Roboflow detection error: {e}")
+        
+        # Fallback: Try direct API call
+        try:
+            logger.info("Trying direct API call fallback...")
+            url = f"https://detect.roboflow.com/{DETECTION_MODEL}"
+            params = {"api_key": ROBOFLOW_API_KEY}
+            
+            response = requests.post(
+                url,
+                params=params,
+                data=image_base64,
+                headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                logger.info(f"Direct API response: {len(result.get('predictions', []))} predictions")
+                return result
+            else:
+                logger.error(f"Direct API error: {response.status_code} - {response.text}")
+                return {"error": response.text}
+                
+        except Exception as e2:
+            logger.error(f"Fallback API error: {e2}")
+            return {"error": str(e2)}
+
+
+def parse_detection_response(response, frame_width: int, frame_height: int) -> list:
+    """
+    Parse Roboflow detection response into detection format
+    Standard detection format: {"predictions": [{"x", "y", "width", "height", "class", "confidence"}]}
+    """
+    detections = []
+    
+    if "error" in response:
+        return detections
+    
+    # Get predictions
+    predictions = response.get("predictions", [])
+    
+    logger.info(f"Roboflow returned {len(predictions)} predictions")
+    
+    for pred in predictions:
+        try:
+            # Standard Roboflow detection format
+            x_center = pred.get("x", 0)
+            y_center = pred.get("y", 0)
+            width = pred.get("width", 0)
+            height = pred.get("height", 0)
+            confidence = pred.get("confidence", 0)
+            class_name = pred.get("class", "animal")
+            
+            # Convert to bbox format [x1, y1, x2, y2]
+            x1 = x_center - width / 2
+            y1 = y_center - height / 2
+            x2 = x_center + width / 2
+            y2 = y_center + height / 2
+            
+            # Filter low confidence
+            if confidence < 0.25:
+                continue
+            
+            # Normalize class name
+            display_class = "Kambing"
+            if "sheep" in class_name.lower() or "goat" in class_name.lower():
+                display_class = "Kambing"
+            elif "head" in class_name.lower():
+                display_class = "Kambing"
+            else:
+                display_class = class_name.title()
+            
+            detections.append({
+                "class": display_class,
+                "confidence": confidence,
+                "bbox": [x1, y1, x2, y2],
+                "behavior": "Normal"
+            })
+            
+            logger.info(f"Detection: {display_class} ({confidence:.2f}) at [{x1:.0f},{y1:.0f},{x2:.0f},{y2:.0f}]")
+            
+        except Exception as e:
+            logger.error(f"Error parsing prediction: {e}")
+            continue
+    
+    return detections
+
+
+def analyze_image(image_bytes: bytes):
+    """
+    Analyze image using Roboflow Detection API
+    Returns detected animals and zone tracking info
+    """
+    try:
         # Decode image
+        nparr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None:
-            return {"error": "Failed to decode image", "detections": []}
+            logger.error("Failed to decode image")
+            return {"error": "Failed to decode image"}
         
-        # Get frame dimensions for zone calculation
         frame_height, frame_width = img.shape[:2]
+        logger.info(f"Image decoded: shape=({frame_height}, {frame_width}, 3)")
         
-        # Debug: Log image info
-        logger.info(f"Image decoded: shape={img.shape}, dtype={img.dtype}")
-
-        # Run inference with lower confidence threshold for better detection
-        # Lowered from 0.4 to 0.2 to catch more detections
-        results = model(img, conf=0.2, verbose=False) 
-
-        detections = []
+        # Encode image to base64
+        _, buffer = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        image_base64 = base64.b64encode(buffer).decode('utf-8')
+        
+        # Call Roboflow detection
+        response = call_roboflow_detection(image_base64)
+        
+        # Parse detections
+        detections = parse_detection_response(response, frame_width, frame_height)
+        
+        # Update zone tracking if we have detections
         zone_info = None
         should_trigger_feeding = False
         
-        for result in results:
-            boxes = result.boxes
-            logger.info(f"Raw detections before filtering: {len(boxes)} boxes")
-            for box in boxes:
-                # Get class info
-                cls = int(box.cls[0])
-                class_name = model.names[cls]
-                conf = float(box.conf[0])
-                
-                # Get box coordinates
-                x1, y1, x2, y2 = box.xyxy[0].tolist()
-                
-                # LOG what we detected
-                logger.info(f"YOLO detected: class_id={cls}, class_name='{class_name}', conf={conf:.2f}, bbox=[{x1:.0f},{y1:.0f},{x2:.0f},{y2:.0f}]")
-                
-                # Update movement tracking FIRST (before filter) for first detection only
-                # This ensures zone tracking works even if class is not sheep/cow
-                if zone_info is None:
-                    zone_info = movement_tracker.update(
-                        [x1, y1, x2, y2], 
-                        frame_width, 
-                        frame_height
-                    )
-                    should_trigger_feeding = zone_info["should_feed"]
-                    logger.info(f"✅ Zone tracking updated: zone={zone_info['zone']}, moves={zone_info['movement_count']}, trigger={should_trigger_feeding}")
-                
-                # Filter: only keep sheep/cow/goat-like animals  
-                # COCO classes: 16=bird, 17=cat, 18=dog, 19=horse, 20=sheep, 21=cow
-                # NOTE: Removed person (0) - only accept actual animals
-                relevant_class_ids = [17, 18, 19, 20, 21]  # cat, dog, horse, sheep, cow
-                relevant_class_names = ['sheep', 'cow', 'horse', 'dog', 'goat', 'cattle', 'cat']
-                
-                if cls not in relevant_class_ids and class_name.lower() not in relevant_class_names:
-                    logger.warning(f"❌ FILTERED OUT: {class_name} (ID: {cls}) - not a goat-like animal")
-                    continue
-                
-                logger.info(f"✅ ACCEPTED: {class_name} (ID: {cls})")
-                
-                # Rename to "Kambing" for user-friendly Indonesian display
-                display_name = "Kambing" if cls in [19, 20, 21] or class_name.lower() in ['sheep', 'cow', 'cattle', 'goat', 'horse'] else class_name
-                
-                # Simple behavior heuristic based on aspect ratio or position (Placeholder)
-                # In a real scenario, you'd train a custom model for behaviors like 'eating', 'sleeping'
-                width = x2 - x1
-                height = y2 - y1
-                aspect_ratio = width / height
-                
-                # More accurate behavior detection - only mark as lying down if very wide
-                behavior = "Standing"
-                if aspect_ratio > 2.0:  # Changed from 1.2 to 2.0 - much wider bbox = lying
-                    behavior = "Lying Down"
-                elif aspect_ratio < 0.6:  # Very tall and narrow
-                    behavior = "Sitting"
-                
-                detections.append({
-                    "class": display_name,
-                    "confidence": round(conf, 2),
-                    "bbox": [round(x1), round(y1), round(x2), round(y2)],
-                    "behavior": behavior,
-                    "zone": zone_info["zone"] if zone_info else "UNKNOWN"
-                })
-
-        count = len(detections)
-        logger.info(f"Detected {count} objects.")
-
+        if detections:
+            # Use first detection for zone tracking
+            bbox = detections[0]["bbox"]
+            zone_info = movement_tracker.update(
+                bbox,
+                frame_width,
+                frame_height
+            )
+            should_trigger_feeding = zone_info["should_feed"]
+            logger.info(f"✅ Zone tracking: zone={zone_info['zone']}, moves={zone_info['movement_count']}, trigger={should_trigger_feeding}")
+        else:
+            logger.info("No valid detections - skipping zone tracking")
+        
+        logger.info(f"Detected {len(detections)} sheep/goat heads")
+        
         return {
-            "status": "success",
-            "count": count,
             "detections": detections,
+            "count": len(detections),
             "zone_info": zone_info,
-            "should_trigger_feeding": should_trigger_feeding
+            "should_trigger_feeding": should_trigger_feeding,
+            "frame_size": {"width": frame_width, "height": frame_height}
         }
-
+        
     except Exception as e:
-        logger.error(f"Error during analysis: {e}")
-        return {"error": str(e), "detections": []}
-
+        logger.error(f"Error analyzing image: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}

@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import ExpansionModal from './expansion-modal';
 
+interface CameraDevice {
+    deviceId: string;
+    label: string;
+}
+
 export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -22,6 +27,12 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
     const [apiConnected, setApiConnected] = useState<boolean | null>(null); // null = unknown, true = connected, false = failed
     const [apiError, setApiError] = useState('');
 
+    // Camera selection state
+    const [cameras, setCameras] = useState<CameraDevice[]>([]);
+    const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+    const [isCameraDropdownOpen, setIsCameraDropdownOpen] = useState(false);
+    const currentStreamRef = useRef<MediaStream | null>(null);
+
     // Smoothed detection positions for interpolation
     const smoothedBoxesRef = useRef<Map<number, { x: number, y: number, w: number, h: number }>>(new Map());
 
@@ -32,15 +43,46 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
     const lastDetectionTimeRef = useRef<number>(0); // For holdover logic
     const HOLDOVER_MS = 1500; // Keep detection visible for 1.5s after lost (prevents flickering)
 
+    // Enumerate available cameras on mount
     useEffect(() => {
-        void setupCamera();
+        async function getCameras() {
+            try {
+                // Request permission first to get labels
+                await navigator.mediaDevices.getUserMedia({ video: true });
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices
+                    .filter(device => device.kind === 'videoinput')
+                    .map((device, index) => ({
+                        deviceId: device.deviceId,
+                        label: device.label || `Camera ${index + 1}`
+                    }));
+                setCameras(videoDevices);
+                if (videoDevices.length > 0 && !selectedCameraId) {
+                    setSelectedCameraId(videoDevices[0].deviceId);
+                }
+            } catch (e) {
+                console.error('Error enumerating cameras:', e);
+            }
+        }
+        getCameras();
+    }, []);
+
+    // Setup camera when selectedCameraId changes
+    useEffect(() => {
+        if (selectedCameraId) {
+            void setupCamera(selectedCameraId);
+        }
         return () => {
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
+            // Stop previous stream
+            if (currentStreamRef.current) {
+                currentStreamRef.current.getTracks().forEach(track => track.stop());
+            }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [selectedCameraId]);
 
     useEffect(() => {
         if (cameraReady && isAIEnabled !== undefined) {
@@ -78,11 +120,23 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cameraReady, isAIEnabled]);
 
-    async function setupCamera() {
+    async function setupCamera(deviceId?: string) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 1280, height: 720, facingMode: 'user' }
-            });
+            // Stop previous stream
+            if (currentStreamRef.current) {
+                currentStreamRef.current.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints: MediaStreamConstraints = {
+                video: {
+                    width: 1280,
+                    height: 720,
+                    ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' })
+                }
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            currentStreamRef.current = stream;
 
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -95,6 +149,12 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
             setError('Camera Access Denied');
             console.error(e);
         }
+    }
+
+    function handleCameraChange(deviceId: string) {
+        setCameraReady(false);
+        setSelectedCameraId(deviceId);
+        setIsCameraDropdownOpen(false);
     }
 
     // Capture a resized frame from the video element and return as a Blob
@@ -386,7 +446,7 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
         animationRef.current = requestAnimationFrame(drawAI);
     }
 
-    const wrapperClasses = `relative w-full overflow-hidden bg-black ${inModal ? '' : 'h-full rounded-[2rem] border border-white/50 shadow-xl'}`;
+    const wrapperClasses = `relative w-full flex flex-col bg-black ${inModal ? 'h-full' : 'h-full rounded-[2rem] border border-white/50 shadow-xl'}`;
 
     return (
         <div className={wrapperClasses}>
@@ -462,27 +522,19 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
             </div>
 
             {/* Video Container */}
-            <div className="relative bg-black aspect-video group overflow-hidden">
+            <div className="relative bg-black group overflow-hidden flex-1 min-h-0 flex items-center justify-center">
                 <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover transform scale-x-[-1]"
+                    className="max-w-full max-h-full object-contain transform scale-x-[-1]"
                 />
 
                 <canvas
                     ref={canvasRef}
-                    className="absolute inset-0 w-full h-full transform scale-x-[-1] z-10"
+                    className="absolute inset-0 max-w-full max-h-full m-auto transform scale-x-[-1] z-10"
                 />
-
-                {/* Scanlines Effect */}
-                <div className="absolute inset-0 pointer-events-none z-20 opacity-30" style={{
-                    background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2))',
-                    backgroundSize: '100% 4px'
-                }} />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none z-20" />
 
                 {/* Loading / Error State */}
                 {!cameraReady && (
@@ -508,7 +560,7 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
             </div>
 
             {/* Footer Controls */}
-            <div className="bg-gray-800 p-4 border-t border-gray-700 flex justify-between items-center z-30 relative">
+            <div className="bg-gray-800 p-4 border-t border-gray-700 flex justify-between items-center z-30 relative shrink-0">
                 <div className="flex gap-2">
                     <button
                         onClick={() => setIsAIEnabled(!isAIEnabled)}
@@ -524,7 +576,7 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
                                 <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
                             )}
                         </svg>
-                        <span>AI Overlay: {isAIEnabled ? 'ON' : 'OFF'}</span>
+                        <span>AI: {isAIEnabled ? 'ON' : 'OFF'}</span>
                     </button>
                     <button
                         onClick={() => setIsAnomaliMode(!isAnomaliMode)}
@@ -534,8 +586,55 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
                             <path d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" />
                             <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
                         </svg>
-                        Sim. Anomali
+                        Anomali
                     </button>
+
+                    {/* Camera Selector Dropdown */}
+                    {cameras.length >= 1 && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsCameraDropdownOpen(!isCameraDropdownOpen)}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm font-medium transition-all"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <span className="hidden sm:inline">Kamera</span>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {isCameraDropdownOpen && (
+                                <div className="absolute bottom-full mb-2 left-0 bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-[200px] z-50">
+                                    <div className="py-1">
+                                        <div className="px-3 py-2 text-xs text-gray-400 font-semibold uppercase border-b border-gray-700">
+                                            Pilih Kamera
+                                        </div>
+                                        {cameras.map((camera) => (
+                                            <button
+                                                key={camera.deviceId}
+                                                onClick={() => handleCameraChange(camera.deviceId)}
+                                                className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${selectedCameraId === camera.deviceId
+                                                    ? 'bg-emerald-600 text-white'
+                                                    : 'text-gray-300 hover:bg-gray-800'
+                                                    }`}
+                                            >
+                                                {selectedCameraId === camera.deviceId && (
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                )}
+                                                <span className={selectedCameraId === camera.deviceId ? '' : 'ml-6'}>
+                                                    {camera.label}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
                 <div className="text-xs text-gray-500 font-mono hidden md:block">
                     MODEL: GOAT_DETECTION_V2.pt
@@ -545,7 +644,7 @@ export default function LiveCamera({ inModal }: { inModal?: boolean } = {}) {
             {!inModal && (
                 <ExpansionModal open={isExpanded} onClose={() => setIsExpanded(false)} title="AI Vision System - Live Camera" noPadding>
                     {/* Render a larger instance inside modal but mark it as inModal to avoid nested expand button */}
-                    <div className="w-full h-full">
+                    <div className="w-full h-[70vh] min-h-[400px]">
                         <LiveCamera inModal />
                     </div>
                 </ExpansionModal>
