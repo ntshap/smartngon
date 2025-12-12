@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/smart ngangon logo.png" alt="Smart Ngangon Logo" width="120">
+  <img src="frontend/public/Logo-smartngon.png" alt="Smart Ngangon Logo" width="120">
 </p>
 
 <h1 align="center">Smart Ngangon</h1>
