@@ -1,0 +1,20 @@
+{
+    "name": "smartngon-monorepo",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Smart Ngangon - Platform Peternakan Kambing Cerdas",
+    "scripts": {
+        "dev": "concurrently -n \"frontend,backend\" -c \"cyan,yellow\" \"npm run dev:frontend\" \"npm run dev:backend\"",
+        "dev:frontend": "cd frontend && npm run dev",
+        "dev:backend": "cd backend-python && python main.py",
+        "install:all": "cd frontend && npm install",
+        "build": "cd frontend && npm run build",
+        "start": "cd frontend && npm run start"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

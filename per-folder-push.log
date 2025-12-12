@@ -1,0 +1,130 @@
+2025-12-12T05:48:07Z Starting per-folder push script
+2025-12-12T05:48:07Z Target branch: main
+2025-12-12T05:48:07Z Large-file threshold: 100 MB
+2025-12-12T05:48:07Z Logfile: /mnt/c/Users/hp_5c/Downloads/smart-ngangon-main/per-folder-push.log
+2025-12-12T05:48:08Z Remote 'origin' URL looks safe (not embedding credentials).
+2025-12-12T05:48:19Z Processing top-level entry: '.gitignore'
+2025-12-12T05:48:19Z Staging '.gitignore'...
+2025-12-12T05:48:20Z No staged changes for '.gitignore'. Nothing to commit.
+2025-12-12T05:48:38Z Processing top-level entry: '.vscode'
+2025-12-12T05:48:38Z Staging '.vscode'...
+2025-12-12T05:48:38Z ERROR: git add failed for '.vscode'. Skipping.
+2025-12-12T05:48:38Z Processing top-level entry: 'README.md'
+2025-12-12T05:48:38Z Staging 'README.md'...
+2025-12-12T05:48:38Z No staged changes for 'README.md'. Nothing to commit.
+2025-12-12T05:48:55Z Processing top-level entry: 'SMARTNGON_CV'
+2025-12-12T05:49:47Z ERROR: Large file(s) detected inside 'SMARTNGON_CV' (threshold 100MB). Skipping this entry.
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cublas/lib/libcublas.so.12    111MB (116388640 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cublas/lib/libcublasLt.so.12    717MB (751771728 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.alt.so.12    101MB (104966520 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn_adv.so.9    273MB (285226600 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn_engines_precompiled.so.9    523MB (547383096 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn_ops.so.9    123MB (127936080 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cufft/lib/libcufft.so.11    267MB (278925016 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/curand/lib/libcurand.so.10    131MB (136749240 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cusolver/lib/libcusolver.so.11    233MB (243303872 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cusolver/lib/libcusolverMg.so.11    155MB (161493576 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cusparse/lib/libcusparse.so.12    371MB (387990224 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/cusparselt/lib/libcusparseLt.so.0    432MB (451980513 bytes)
+2025-12-12T05:49:47Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/nccl/lib/libnccl.so.2    410MB (429628328 bytes)
+2025-12-12T05:49:48Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/nvidia/nvshmem/lib/libnvshmem_host.so.3    138MB (144177272 bytes)
+2025-12-12T05:49:48Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so    417MB (436938961 bytes)
+2025-12-12T05:49:48Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so    976MB (1022776209 bytes)
+2025-12-12T05:49:48Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/torch/lib/libtorch_cuda_linalg.so    122MB (127492873 bytes)
+2025-12-12T05:49:48Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/triton/_C/libtriton.so    383MB (401081768 bytes)
+2025-12-12T05:49:48Z ERROR:  - SMARTNGON_CV/venv/lib/python3.12/site-packages/_polars_runtime_32/_polars_runtime_32.abi3.so    127MB (133090728 bytes)
+2025-12-12T05:49:48Z Suggestion: do not run automatic LFS migration. Use one of these manual options:
+2025-12-12T05:49:48Z   - Track large files with 'git lfs track' then commit/push manually
+2025-12-12T05:49:48Z   - Remove the large files from history with BFG or git-filter-repo before pushing
+2025-12-12T05:49:48Z   - Or split the large file out of this repo and host it elsewhere
+2025-12-12T05:49:48Z Processing top-level entry: 'SmartMap.jsx'
+2025-12-12T05:49:48Z Staging 'SmartMap.jsx'...
+2025-12-12T05:49:48Z No staged changes for 'SmartMap.jsx'. Nothing to commit.
+2025-12-12T05:50:06Z Processing top-level entry: 'backend-python'
+2025-12-12T05:50:56Z ERROR: Large file(s) detected inside 'backend-python' (threshold 100MB). Skipping this entry.
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cublas/lib/libcublas.so.12    111MB (116388640 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cublas/lib/libcublasLt.so.12    717MB (751771728 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/libnvrtc.alt.so.12    101MB (104966520 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn_adv.so.9    273MB (285226600 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn_engines_precompiled.so.9    523MB (547383096 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn_ops.so.9    123MB (127936080 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cufft/lib/libcufft.so.11    267MB (278925016 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/curand/lib/libcurand.so.10    131MB (136749240 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cusolver/lib/libcusolver.so.11    233MB (243303872 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cusolver/lib/libcusolverMg.so.11    155MB (161493576 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cusparse/lib/libcusparse.so.12    371MB (387990224 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/cusparselt/lib/libcusparseLt.so.0    432MB (451980513 bytes)
+2025-12-12T05:50:56Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/nccl/lib/libnccl.so.2    410MB (429628328 bytes)
+2025-12-12T05:50:57Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/nvidia/nvshmem/lib/libnvshmem_host.so.3    138MB (144177272 bytes)
+2025-12-12T05:50:57Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so    417MB (436938961 bytes)
+2025-12-12T05:50:57Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so    976MB (1022776209 bytes)
+2025-12-12T05:50:57Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/torch/lib/libtorch_cuda_linalg.so    122MB (127492873 bytes)
+2025-12-12T05:50:57Z ERROR:  - backend-python/venv/lib/python3.12/site-packages/triton/_C/libtriton.so    383MB (401081768 bytes)
+2025-12-12T05:50:57Z Suggestion: do not run automatic LFS migration. Use one of these manual options:
+2025-12-12T05:50:57Z   - Track large files with 'git lfs track' then commit/push manually
+2025-12-12T05:50:57Z   - Remove the large files from history with BFG or git-filter-repo before pushing
+2025-12-12T05:50:57Z   - Or split the large file out of this repo and host it elsewhere
+2025-12-12T05:50:57Z Processing top-level entry: 'copy-images.bat'
+2025-12-12T05:50:57Z Staging 'copy-images.bat'...
+2025-12-12T05:50:57Z No staged changes for 'copy-images.bat'. Nothing to commit.
+2025-12-12T05:51:15Z Processing top-level entry: 'dashboard.html'
+2025-12-12T05:51:15Z Staging 'dashboard.html'...
+2025-12-12T05:51:15Z No staged changes for 'dashboard.html'. Nothing to commit.
+2025-12-12T05:51:30Z Processing top-level entry: 'docs'
+2025-12-12T05:51:30Z Staging 'docs'...
+2025-12-12T05:51:31Z No staged changes for 'docs'. Nothing to commit.
+2025-12-12T05:51:47Z Processing top-level entry: 'firmware'
+2025-12-12T05:51:47Z Staging 'firmware'...
+2025-12-12T05:51:47Z No staged changes for 'firmware'. Nothing to commit.
+2025-12-12T05:52:05Z Processing top-level entry: 'front end'
+2025-12-12T05:52:54Z ERROR: Large file(s) detected inside 'front end' (threshold 100MB). Skipping this entry.
+2025-12-12T05:52:54Z ERROR:  - front end/node_modules/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node    132MB (137832912 bytes)
+2025-12-12T05:52:54Z ERROR:  - front end/node_modules/@next/swc-linux-x64-musl/next-swc.linux-x64-musl.node    132MB (137691696 bytes)
+2025-12-12T05:52:54Z Suggestion: do not run automatic LFS migration. Use one of these manual options:
+2025-12-12T05:52:54Z   - Track large files with 'git lfs track' then commit/push manually
+2025-12-12T05:52:54Z   - Remove the large files from history with BFG or git-filter-repo before pushing
+2025-12-12T05:52:54Z   - Or split the large file out of this repo and host it elsewhere
+2025-12-12T05:52:54Z Processing top-level entry: 'generated-page (5).html'
+2025-12-12T05:52:54Z Staging 'generated-page (5).html'...
+2025-12-12T05:52:55Z No staged changes for 'generated-page (5).html'. Nothing to commit.
+2025-12-12T05:53:11Z Processing top-level entry: 'img'
+2025-12-12T05:53:11Z Staging 'img'...
+2025-12-12T05:53:12Z No staged changes for 'img'. Nothing to commit.
+2025-12-12T05:53:27Z Processing top-level entry: 'livecam.html'
+2025-12-12T05:53:27Z Staging 'livecam.html'...
+2025-12-12T05:53:28Z No staged changes for 'livecam.html'. Nothing to commit.
+2025-12-12T05:53:43Z Processing top-level entry: 'node_modules'
+2025-12-12T05:53:44Z Staging 'node_modules'...
+2025-12-12T05:53:50Z ERROR: git add failed for 'node_modules'. Skipping.
+2025-12-12T05:53:50Z Processing top-level entry: 'package-lock.json'
+2025-12-12T05:53:50Z Staging 'package-lock.json'...
+2025-12-12T05:53:50Z No staged changes for 'package-lock.json'. Nothing to commit.
+2025-12-12T05:54:06Z Processing top-level entry: 'package.json'
+2025-12-12T05:54:06Z Staging 'package.json'...
+2025-12-12T05:54:06Z No staged changes for 'package.json'. Nothing to commit.
+2025-12-12T05:54:22Z Processing top-level entry: 'per-folder-push.log'
+2025-12-12T05:54:22Z Staging 'per-folder-push.log'...
+2025-12-12T05:54:22Z ERROR: git add failed for 'per-folder-push.log'. Skipping.
+2025-12-12T05:54:22Z Processing top-level entry: 'scripts'
+2025-12-12T05:54:22Z Staging 'scripts'...
+2025-12-12T05:54:22Z Committing staged changes for 'scripts' with message: Add/Update: scripts
+2025-12-12T05:54:42Z Committed 'scripts'.
+2025-12-12T05:54:42Z Commit created for 'scripts' (push skipped — push manually when ready).
+2025-12-12T05:54:42Z To push this commit: git push origin main
+2025-12-12T05:54:42Z Processing top-level entry: 'smartmap.html'
+2025-12-12T05:54:42Z Staging 'smartmap.html'...
+2025-12-12T05:54:42Z No staged changes for 'smartmap.html'. Nothing to commit.
+2025-12-12T05:54:56Z Processing top-level entry: 'supabase_complete_schema.sql'
+2025-12-12T05:54:56Z Staging 'supabase_complete_schema.sql'...
+2025-12-12T05:54:57Z No staged changes for 'supabase_complete_schema.sql'. Nothing to commit.
+2025-12-12T05:55:11Z Processing top-level entry: 'supabase_iot_tables.sql'
+2025-12-12T05:55:11Z Staging 'supabase_iot_tables.sql'...
+2025-12-12T05:55:11Z No staged changes for 'supabase_iot_tables.sql'. Nothing to commit.
+2025-12-12T05:55:27Z Processing top-level entry: 'supabase_schema.sql'
+2025-12-12T05:55:27Z Staging 'supabase_schema.sql'...
+2025-12-12T05:55:27Z No staged changes for 'supabase_schema.sql'. Nothing to commit.
+2025-12-12T05:55:42Z Processing top-level entry: 'supabase_storage.sql'
+2025-12-12T05:55:42Z Staging 'supabase_storage.sql'...
+2025-12-12T05:55:43Z No staged changes for 'supabase_storage.sql'. Nothing to commit.
+2025-12-12T05:56:01Z All entries processed.
+2025-12-12T05:56:01Z Exiting with code 0
