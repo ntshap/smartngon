@@ -20,50 +20,52 @@ interface Zone {
     coords: LatLngExpression[];
 }
 
-// KONFIGURASI ZONA SESUAI DIGITAL FARM - BANTUL
+// KONFIGURASI ZONA SESUAI BANTUL
 const ZONES: Record<string, Zone> = {
     tidur: {
         name: "Kandang Tidur",
         color: '#3b82f6',
-        center: [-7.88945, 110.37010] as LatLngExpression,
+        center: [-7.95255, 110.38775] as LatLngExpression,
         coords: [
-            [-7.8893, 110.3699],
-            [-7.8893, 110.3703],
-            [-7.8896, 110.3703],
-            [-7.8896, 110.3699]
+            [-7.9524, 110.3876],
+            [-7.9524, 110.3879],
+            [-7.9527, 110.3879],
+            [-7.9527, 110.3876]
         ] as LatLngExpression[]
     },
     pakan: {
         name: "Area Pakan",
         color: '#f97316',
-        center: [-7.88960, 110.37025] as LatLngExpression,
+        center: [-7.95255, 110.38807] as LatLngExpression,
         coords: [
-            [-7.8895, 110.3701],
-            [-7.8895, 110.3704],
-            [-7.8897, 110.3704],
-            [-7.8897, 110.3701]
+            [-7.9524, 110.38795],
+            [-7.9524, 110.38820],
+            [-7.9527, 110.38820],
+            [-7.9527, 110.38795]
         ] as LatLngExpression[]
     },
     minum: {
         name: "Water Station",
         color: '#06b6d4',
-        center: [-7.88970, 110.36995] as LatLngExpression,
+        center: [-7.95280, 110.38810] as LatLngExpression,
         coords: [
-            [-7.8896, 110.3698],
-            [-7.8896, 110.3701],
-            [-7.8898, 110.3701],
-            [-7.8898, 110.3698]
+            [-7.95275, 110.38800],
+            [-7.95275, 110.38820],
+            [-7.95285, 110.38820],
+            [-7.95285, 110.38800]
         ] as LatLngExpression[]
     },
     umbaran: {
         name: "Padang Rumput",
         color: '#22c55e',
-        center: [-7.88980, 110.37010] as LatLngExpression,
+        center: [-7.9529, 110.3878] as LatLngExpression,
         coords: [
-            [-7.8897, 110.3698],
-            [-7.8897, 110.3704],
-            [-7.8900, 110.3704],
-            [-7.8900, 110.3698]
+            [-7.95275, 110.3876],
+            [-7.95275, 110.38795],
+            [-7.95285, 110.38795],
+            [-7.95285, 110.38820],
+            [-7.9531, 110.38820],
+            [-7.9531, 110.3876]
         ] as LatLngExpression[]
     }
 };
@@ -121,7 +123,7 @@ function MapControls() {
             <button
                 className="bg-white/90 hover:bg-white text-gray-700 p-3 rounded-lg shadow-lg backdrop-blur-sm transition-all mt-2"
                 title="Reset View"
-                onClick={() => map.flyTo([-7.8896, 110.3700], 19, { duration: 1.5 })}
+                onClick={() => map.flyTo([-7.9526, 110.3878], 19, { duration: 1.5 })}
             >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -310,7 +312,7 @@ export default function SmartMapComponent({ goats = [], inModal = false }: Smart
             </div>
 
             <MapContainer
-                center={[-7.8896, 110.3700] as LatLngExpression}
+                center={[-7.9526, 110.3878] as LatLngExpression}
                 zoom={19}
                 minZoom={15}
                 maxZoom={20}

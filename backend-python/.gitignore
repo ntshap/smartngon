@@ -1,40 +1,42 @@
-# Python
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-venv/
-ENV/
-env/
-.venv/
+
+# Environment variables
+.env
+.env.local
 
 # Logs
 *.log
 backend.log
 
-# Debug files
-debug_*.py
-debug_*.jpg
-debug_*.png
-
-# Environment
-.env
-!.env.example
-
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
 
 # Model weights (large files)
-# *.pt
+*.pt
+*.pth
+*.onnx
 
-# Backup
-*.backup
-.git.backup/
+# Debug files
+debug_*.jpg
+debug_*.png
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
+
+# Distribution
+dist/
+build/
+*.egg-info/
