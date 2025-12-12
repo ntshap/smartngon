@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+
+# Logs
+*.log
+backend.log
+
+# Debug files
+debug_*.py
+debug_*.jpg
+debug_*.png
+
+# Environment
+.env
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Model weights (large files)
+# *.pt
+
+# Backup
+*.backup
+.git.backup/
+
+# OS
+.DS_Store
+Thumbs.db
