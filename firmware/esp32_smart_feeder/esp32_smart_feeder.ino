@@ -22,8 +22,8 @@
 const char* WIFI_SSID = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// MQTT Broker Settings
-const char* MQTT_SERVER = "YOUR_MQTT_BROKER";
+// MQTT Broker Settings - DigitalOcean VPS
+const char* MQTT_SERVER = "129.212.234.195";
 const int MQTT_PORT = 1883;
 const char* MQTT_USER = "";
 const char* MQTT_PASSWORD = "";

@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   title: "Smart Ngangon - Pemantauan AI untuk Kambing Anda",
   description:
     "Smart Ngangon membantu Anda membeli kambing secara online dan memantau kesehatannya dengan dukungan AI.",
+  icons: {
+    icon: "/Logo-smartngon.ico",
+    shortcut: "/Logo-smartngon.ico",
+    apple: "/Logo-smartngon.png",
+  },
 };
 
 export default function RootLayout({

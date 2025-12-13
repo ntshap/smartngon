@@ -38,12 +38,12 @@ export default function SettingsAdminPage() {
         setMessage(null);
 
         try {
-            // Find user by email
+            // Find user by email (cast to any to bypass strict typing)
             const { data: users, error: findError } = await supabase
                 .from('profiles')
                 .select('id, email')
                 .eq('email', adminEmail.toLowerCase())
-                .single();
+                .single() as { data: { id: string; email: string } | null; error: any };
 
             if (findError || !users) {
                 setMessage({ type: "error", text: "User dengan email tersebut tidak ditemukan" });
@@ -127,8 +127,8 @@ export default function SettingsAdminPage() {
 
                 {message && (
                     <div className={`mb-4 rounded-lg px-4 py-3 text-sm ${message.type === "success"
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-red-50 text-red-600"
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-red-50 text-red-600"
                         }`}>
                         {message.text}
                     </div>
