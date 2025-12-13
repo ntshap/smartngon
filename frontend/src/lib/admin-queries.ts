@@ -1,4 +1,7 @@
-import { supabase } from '@/utils/supabase/client';
+import { supabase as supabaseClient } from '@/utils/supabase/client';
+
+// Cast to any to bypass strict typing for tables not in generated types
+const supabase = supabaseClient as any;
 
 // =====================================================
 // TYPES
@@ -471,7 +474,7 @@ export async function getAdminStats(): Promise<AdminStats> {
         supabase.from('faqs').select('id', { count: 'exact' }),
     ]);
 
-    const goatsForSale = goatsResult.data?.filter(g => g.is_for_sale).length || 0;
+    const goatsForSale = goatsResult.data?.filter((g: any) => g.is_for_sale).length || 0;
 
     return {
         totalGoats: goatsResult.count || 0,
