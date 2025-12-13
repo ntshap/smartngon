@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Set turbopack root to resolve multiple lockfiles in monorepo
+  turbopack: {
+    root: process.cwd(),
+  },
   images: {
     remotePatterns: [
       {
