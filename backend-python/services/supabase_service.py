@@ -17,12 +17,8 @@ class SupabaseService:
         if not url or not key:
             raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
         
-
-        from supabase.lib.client_options import ClientOptions
-        self.client: Client = create_client(url, key, options=ClientOptions(
-            postgrest_client_timeout=10,
-            storage_client_timeout=10
-        ))
+        # Simple client initialization for supabase 2.25+
+        self.client: Client = create_client(url, key)
         logger.info("Supabase client initialized")
     
     # Sensor Logs

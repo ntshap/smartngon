@@ -1,0 +1,12 @@
+names:
+- Sheep
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: smartngon-f7tgv
+  url: https://universe.roboflow.com/facedetection-xyhtm/smartngon-f7tgv/dataset/2
+  version: 2
+  workspace: facedetection-xyhtm
+test: ../test/images
+train: ../train/images
+val: ../valid/images

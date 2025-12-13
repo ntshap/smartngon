@@ -1,5 +1,6 @@
 # test_roboflow_pipeline.py
 # Run this to test if Roboflow workflow can detect sheep/goat heads
+# NOTE: Run this on Windows (not WSL) to access webcam
 
 from inference import InferencePipeline
 import cv2
