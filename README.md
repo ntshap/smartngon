@@ -8,6 +8,12 @@
   Platform Peternakan Kambing Cerdas berbasis AI dan IoT
 </p>
 
+<p align="center">
+  <a href="https://smartngon.com">🌐 Live Demo</a> •
+  <a href="#quick-start">🚀 Quick Start</a> •
+  <a href="#deployment">📦 Deployment</a>
+</p>
+
 ---
 
 ## Deskripsi
@@ -20,45 +26,39 @@
 
 | Fitur | Deskripsi |
 |-------|-----------|
-| **Live Camera** | Streaming video real-time dari kandang |
-| **AI Detection** | Deteksi keberadaan dan perilaku kambing menggunakan YOLOv8 |
-| **Smart Feeding** | Kontrol pakan otomatis dan manual via MQTT |
-| **Zonal Tracking** | Visualisasi lokasi kambing dalam area kandang |
-| **Marketplace** | Katalog jual-beli kambing dengan checkout WhatsApp |
-| **Dashboard** | Monitoring kesehatan, statistik, dan notifikasi |
+| 📹 **Live Camera** | Streaming video real-time dari kandang |
+| 🤖 **AI Detection** | Deteksi keberadaan dan perilaku kambing menggunakan YOLOv8 |
+| 🍽️ **Smart Feeding** | Kontrol pakan otomatis dan manual via MQTT |
+| 📍 **Zonal Tracking** | Visualisasi lokasi kambing dalam area kandang |
+| 🛒 **Marketplace** | Katalog jual-beli kambing dengan checkout WhatsApp |
+| 📊 **Dashboard** | Monitoring kesehatan, statistik, dan notifikasi |
 
 ---
 
 ## Arsitektur
 
 ```mermaid
-flowchart LR
-    subgraph Frontend
-        A[Next.js Web App]
+flowchart TB
+    subgraph Cloud
+        FE[Frontend - Vercel]
+        API[Backend API - VPS]
+        MQTT[MQTT Broker]
+        DB[(Supabase)]
     end
-
-    subgraph Backend
-        B[FastAPI Server]
-        C[YOLO Service]
-        D[MQTT Service]
+    
+    subgraph On-Premises
+        CAM[IP Camera]
+        JN[Jetson Nano - CV]
+        ESP[ESP32 Feeder]
     end
-
-    subgraph IoT
-        E[ESP32 + Servo]
-        F[IP Camera]
-    end
-
-    subgraph Database
-        G[Supabase]
-    end
-
-    A <-->|REST API| B
-    B --> C
-    B <-->|Pub/Sub| D
-    D <-->|MQTT| E
-    F -->|RTSP Stream| B
-    B <--> G
-    A <--> G
+    
+    FE <-->|REST API| API
+    API <--> DB
+    API <-->|Pub/Sub| MQTT
+    MQTT <-->|Commands| ESP
+    CAM -->|RTSP| JN
+    JN -->|Detection Data| DB
+    JN -->|Feed Trigger| MQTT
 ```
 
 ---
@@ -71,15 +71,15 @@ flowchart LR
 | Backend | Python, FastAPI, Uvicorn |
 | AI/CV | YOLOv8, Ultralytics |
 | Database | Supabase (PostgreSQL) |
-| IoT | ESP32, MQTT, Servo Motor |
-| Maps | Leaflet, React-Leaflet |
+| IoT | ESP32, MQTT (Mosquitto), Servo Motor |
+| Hosting | Vercel (Frontend), DigitalOcean VPS (Backend) |
 
 ---
 
 ## Struktur Proyek
 
 ```
-smart-ngangon-main/
+smart-ngangon/
 ├── frontend/           # Next.js web application
 │   ├── src/
 │   └── public/
@@ -89,8 +89,7 @@ smart-ngangon-main/
 │   └── main.py
 ├── firmware/           # ESP32 Arduino code
 ├── SMARTNGON_CV/       # YOLO training files
-├── docs/               # Documentation
-└── package.json        # Root scripts (concurrent dev)
+└── docs/               # Documentation
 ```
 
 ---
@@ -101,40 +100,102 @@ smart-ngangon-main/
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-repo/smart-ngangon.git
-cd smart-ngangon-main
+git clone https://github.com/ntshap/smartngon.git
+cd smartngon
 
-# 2. Install dependencies
+# 2. Install frontend dependencies
+cd frontend
 npm install
-npm run install:all
 
 # 3. Setup Python backend
-cd backend-python
+cd ../backend-python
 python -m venv venv
 source venv/bin/activate    # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cd ..
 
-# 4. Jalankan semua (frontend + backend)
-npm run dev
+# 4. Download YOLO model (if using local inference)
+# Download best.pt from your trained model
+
+# 5. Setup environment variables
+cp .env.example .env
+# Edit .env with your Supabase credentials
+
+# 6. Run development servers
+# Terminal 1 - Backend:
+cd backend-python && source venv/bin/activate && uvicorn main:app --reload
+
+# Terminal 2 - Frontend:
+cd frontend && npm run dev
 ```
 
-Buka browser:
+**Access:**
 - Frontend: `http://localhost:3000`
 - Backend API: `http://localhost:8000`
+- API Docs: `http://localhost:8000/docs`
 
 ---
 
-## Scripts
+## Deployment
 
-| Command | Deskripsi |
-|---------|-----------|
-| `npm run dev` | Jalankan frontend + backend bersamaan |
-| `npm run dev:frontend` | Jalankan frontend saja |
-| `npm run dev:backend` | Jalankan backend saja |
+### Production URLs
+| Service | URL |
+|---------|-----|
+| Frontend | https://smartngon.com |
+| Backend API | https://api.smartngon.com |
+| MQTT Broker | mqtt://129.212.234.195:1883 |
+
+### Deploy Backend to VPS
+
+```bash
+# SSH to VPS
+ssh root@129.212.234.195
+
+# Clone and setup
+git clone https://github.com/ntshap/smartngon.git /opt/smartngangon
+cd /opt/smartngangon/backend-python
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Create .env file with production credentials
+# Start with systemd service
+```
+
+See [docs/deployment.md](docs/) for full deployment guide.
 
 ---
 
-## Lisensi
+## Environment Variables
+
+### Backend (.env)
+```env
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_KEY=your-service-key
+MQTT_BROKER=localhost
+MQTT_PORT=1883
+```
+
+### Frontend (.env.local)
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_API_URL=https://api.smartngon.com
+```
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Health check |
+| GET | `/health` | Server status |
+| POST | `/cv/analyze` | Analyze image with YOLO |
+| POST | `/iot/feed/{goat_id}` | Trigger feeding |
+| GET | `/iot/wifi/scan` | Scan WiFi networks |
+
+---
+
+## License
 
 © 2025 Smart Ngangon Team. All rights reserved.
